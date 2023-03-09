@@ -108,8 +108,8 @@ def construct_prompt(f):
     for mode in ['qa', 'chat']:
         d[mode] = {}
         usr_suffix, bot_suffix, intro = 'user', 'bot', 'intro'
-        d[mode][usr_suffix] = f"{obj['_'.join([mode, usr_suffix])]}{interface}"
-        d[mode][bot_suffix] = f"{obj['_'.join([mode, bot_suffix])]}{interface}"
+        d[mode][usr_suffix] = f"{obj['_'.join([mode, usr_suffix])]}"
+        d[mode][bot_suffix] = f"{obj['_'.join([mode, bot_suffix])]}"
         _intro = obj['_'.join([mode, intro])] 
         _intro = _intro \
             .replace('{bot}', d[mode][bot_suffix]) \
@@ -120,6 +120,7 @@ def construct_prompt(f):
             .replace('{user}', d[mode][usr_suffix]) \
             .replace('{interface}', interface) \
             .replace('{intro}', _intro) 
-        
+        d[mode][bot_suffix] += interface
+        d[mode][usr_suffix] += interface
     return d
     

@@ -46,13 +46,14 @@ class ChatRWKV:
     def _run_rnn_impl(self, tokens, ctx: RWKVContext = RWKVContext(), newline_adj=0):
         tokens = [int(x) for x in tokens]
         ctx.tokens += tokens
-        out, ctx.state = self.model.forward(tokens, ctx.state)
+        out, state = self.model.forward(tokens, ctx.state)
 
         out[0] = -999999999  # disable <|endoftext|>
         out[187] += newline_adj  # adjust \n probability
         if self.avoid_repeat_tokens and ctx.tokens[-1] in self.avoid_repeat_tokens:
             out[ctx.tokens[-1]] = -999999999
-        ctx.last_out = out
+        ctx.last_out = copy.deepcopy(out)
+        ctx.state = copy.deepcopy(state)
         return out, ctx
 
     def generate(self, ctx: RWKVContext = RWKVContext(), newline_adj=0):
@@ -70,9 +71,9 @@ class ChatRWKV:
             xxx = self.tokenizer.decode(tmp_token)
             if '\ufffd' not in xxx: 
                 break
-        return xxx, copy.deepcopy(ctx)
+        return xxx, ctx
 
     def get_context(self, input, ctx: RWKVContext = RWKVContext(), newline_adj=0):
         _, ctx = self._run_rnn_impl(
-            self.tokenizer.encode(input), newline_adj=newline_adj)
-        return copy.deepcopy(ctx)
+            self.tokenizer.encode(input), ctx, newline_adj=newline_adj)
+        return ctx
